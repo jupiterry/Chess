@@ -9,6 +9,7 @@ function App() {
   const [fen, setFen] = useState(game.fen());
   const [analysis, setAnalysis] = useState({ bestMove: null, score: null, loading: false });
   const [boardWidth, setBoardWidth] = useState(560);
+  const [arrows, setArrows] = useState([]);
 
   // Responsive board size
   useEffect(() => {
@@ -32,6 +33,8 @@ function App() {
       if (result) {
         const newFen = game.fen();
         setFen(newFen);
+        // Clear arrows on new move
+        setArrows([]);
         // Trigger analysis
         fetchAnalysis(newFen);
         return true;
@@ -60,6 +63,8 @@ function App() {
         game.move(move);
         const newFen = game.fen();
         setFen(newFen);
+        // Clear arrows on user interaction
+        setArrows([]);
         fetchAnalysis(newFen);
         return true;
     } catch (e) {
@@ -74,6 +79,7 @@ function App() {
       const data = await analyzeBoard(currentFen);
       if (data.error) {
         setAnalysis({ bestMove: '-', score: 'Error', loading: false, error: true });
+        setArrows([]);
       } else {
         setAnalysis({ 
           bestMove: data.best_move, 
@@ -81,9 +87,19 @@ function App() {
           loading: false, 
           error: null 
         });
+
+        // Set Arrow for best move
+        if (data.best_move && data.best_move !== '-') {
+           const from = data.best_move.substring(0, 2);
+           const to = data.best_move.substring(2, 4);
+           setArrows([[from, to, 'rgb(0, 255, 0)']]);
+        } else {
+           setArrows([]);
+        }
       }
     } catch (error) {
       setAnalysis({ bestMove: '-', score: 'Error', loading: false, error: true });
+      setArrows([]);
     }
   };
 
@@ -93,6 +109,7 @@ function App() {
     setGame(newGame);
     setFen(newGame.fen());
     setAnalysis({ bestMove: null, score: null, loading: false });
+    setArrows([]);
   };
 
   // Play Best Move
@@ -109,6 +126,7 @@ function App() {
           game.move(move);
           const newFen = game.fen();
           setFen(newFen);
+          setArrows([]);
           fetchAnalysis(newFen);
       } catch (e) {
           console.error("Failed to play best move", e);
@@ -130,6 +148,7 @@ function App() {
             customDarkSquareStyle={{ backgroundColor: '#779954' }}
             customLightSquareStyle={{ backgroundColor: '#e9edcc' }}
             animationDuration={200}
+            customArrows={arrows}
           />
         </div>
       </div>
